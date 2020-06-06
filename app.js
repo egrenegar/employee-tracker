@@ -6,13 +6,11 @@ const inquirer = require('inquirer');
 const fs = require('fs');
 // const path = require("path");
 
-
-
 const employeesArray = [];
-const rolesArray = ['Software Engineer', 'Project Manager'];
+const rolesArray = [];
 const departmentsArray = [];
 
-function init() {
+function ask() {
     inquirer
         .prompt([
             {
@@ -26,7 +24,9 @@ function init() {
                     'View Employees',
                     'View Departments',
                     'View Roles',
-                    'Update Employee Roles'
+                    'Update Employee Roles',
+                    new inquirer.Separator(),
+                    'DONE'
                 ]
             }
         ])
@@ -71,20 +71,20 @@ const addRole = () => {
                 type: 'input',
                 message: 'What is the salary for this role?',
                 name: 'salary',
-                // validate: input => {
-                //     if (input) {
-                //         return;
-                //     } else {
-                //         return 'Please enter a valid number';
-                //     }
-                // }
+                validate: answer => {
+                    if (!answer) {
+                     return 'Please enter a valid number.'
+                    }
+                    return true
+                }
             }
         ])
 
         .then (answers => {
-            const role = new Role (answers.title, answers.salary);
-            rolesArray.push(role);
-            console.log(rolesArray);
+            rolesArray.push(answers.title);
+            new Role (answers.title, answers.salary);
+            console.log(`****** ${answers.title} added successfully! ******`);
+            ask();
         })
 }
 
@@ -100,9 +100,10 @@ const addDepartment = () => {
         ])
 
         .then(answers => {
-            const department = new Department(answers.dept_name);
-            departmentsArray.push(department);
-            console.log(departmentsArray);
+            departmentsArray.push(answers.dept_name);
+            new Department(answers.dept_name);
+            console.log(`****** ${answers.dept_name} added successfully! ******`);
+            ask();
         })
 }
 
@@ -137,8 +138,10 @@ const addEmployee = () => {
         .then(answers => {
             const employee = new Employee(answers.first_name, answers.last_name, answers.employee_role, answers.employee_manager);
             employeesArray.push(employee);
-            console.log(employeesArray);
+            console.log(`****** ${answers.first_name} ${answers.last_name} added successfully! ******`);
+            // console.log(employee);
+            ask();
         })
 }
 
-init();
+ask();
