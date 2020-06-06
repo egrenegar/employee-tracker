@@ -1,8 +1,11 @@
-const Employee = require('./Employee');
+const Employee = require('./lib/Employee');
+const Department = require('./lib/Department');
+const Role = require('./lib/Role');
 
 const inquirer = require('inquirer');
-// const path = require("path");
 const fs = require('fs');
+// const path = require("path");
+
 
 
 const employeesArray = [];
@@ -59,16 +62,48 @@ function init() {
 const addRole = () => {
     inquirer
         .prompt([
-
+            {
+                type: 'input',
+                message: 'What is the title of the role?',
+                name: 'title'
+            },
+            {
+                type: 'input',
+                message: 'What is the salary for this role?',
+                name: 'salary',
+                // validate: input => {
+                //     if (input) {
+                //         return;
+                //     } else {
+                //         return 'Please enter a valid number';
+                //     }
+                // }
+            }
         ])
+
+        .then (answers => {
+            const role = new Role (answers.title, answers.salary);
+            rolesArray.push(role);
+            console.log(rolesArray);
+        })
 }
 
 // If user selects 'Add Department' from first question
 const addDepartment = () => {
     inquirer
         .prompt([
-
+            {
+                type: 'input',
+                message: 'What is the name of the department?',
+                name: 'dept_name'
+            }
         ])
+
+        .then(answers => {
+            const department = new Department(answers.dept_name);
+            departmentsArray.push(department);
+            console.log(departmentsArray);
+        })
 }
 
 // If user selects 'Add Employee' from first question
