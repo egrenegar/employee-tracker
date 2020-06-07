@@ -10,7 +10,7 @@ const employeesArray = [];
 const rolesArray = [];
 const departmentsArray = [];
 
-function ask() {
+const ask = () => {
     inquirer
         .prompt([
             {
@@ -54,11 +54,32 @@ function ask() {
                 case 'Update Employee Roles':
                     updateRoles();
                     break;
+                case 'DONE':
+                    return;
             }
+        })
+        
+        .catch(error => {
+            console.log(error);
         })
 };
 
-// If user selects 'Add Role' from first question
+// When user selects 'View Roles' from first question
+const viewRoles = () => {
+    console.log(rolesArray);
+}
+
+// When user selects 'View Departments' from first question
+const viewDepartments = () => {
+    console.log(departmentsArray);
+}
+
+// When user selects 'View Employees' from first question
+const viewEmployees = () => {
+    console.log(employeesArray);
+}
+
+// When user selects 'Add Role' from first question
 const addRole = () => {
     inquirer
         .prompt([
@@ -88,7 +109,7 @@ const addRole = () => {
         })
 }
 
-// If user selects 'Add Department' from first question
+// When user selects 'Add Department' from first question
 const addDepartment = () => {
     inquirer
         .prompt([
@@ -107,7 +128,7 @@ const addDepartment = () => {
         })
 }
 
-// If user selects 'Add Employee' from first question
+// When user selects 'Add Employee' from first question
 const addEmployee = () => {
     inquirer
         .prompt([
