@@ -2,13 +2,34 @@ const Employee = require('./lib/Employee');
 const Department = require('./lib/Department');
 const Role = require('./lib/Role');
 
-const inquirer = require('inquirer');
-const fs = require('fs');
+var mysql = require('mysql');
+const inquirer = require('inquirer')
 // const path = require("path");
 
 const employeesArray = [];
 const rolesArray = [];
 const departmentsArray = [];
+
+
+var connection = mysql.createConnection({
+    host: "localhost",
+
+    // Your port; if not 3306
+    port: 3306,
+
+    // Your username
+    user: "root",
+
+    // Your password
+    password: "rootroot",
+    database: "employeeTracker_db"
+});
+
+connection.connect(function (err) {
+    if (err) throw err;
+    console.log("connected as id " + connection.threadId + "\n");
+    ask();
+});
 
 const ask = () => {
     inquirer
@@ -18,12 +39,12 @@ const ask = () => {
                 message: 'What would you like to do?',
                 name: 'action',
                 choices: [
+                    'View All Employees',
+                    'View All Departments',
+                    'View All Roles',
                     'Add Employee',
                     'Add Department',
                     'Add Role',
-                    'View Employees',
-                    'View Departments',
-                    'View Roles',
                     'Update Employee Roles',
                     new inquirer.Separator(),
                     'DONE'
@@ -33,6 +54,15 @@ const ask = () => {
 
         .then(answers => {
             switch (answers.action) {
+                case 'View All Employees':
+                    viewEmployees();
+                    break;
+                case 'View All Departments':
+                    viewDepartments();
+                    break;
+                case 'View All Roles':
+                    viewRoles();
+                    break;
                 case 'Add Employee':
                     addEmployee();
                     break;
@@ -42,23 +72,14 @@ const ask = () => {
                 case 'Add Role':
                     addRole();
                     break;
-                case 'View Employees':
-                    viewEmployees();
-                    break;
-                case 'View Departments':
-                    viewDepartments();
-                    break;
-                case 'View Roles':
-                    viewRoles();
-                    break;
                 case 'Update Employee Roles':
                     updateRoles();
                     break;
                 case 'DONE':
-                    return;
+                    connection.end();
             }
         })
-        
+
         .catch(error => {
             console.log(error);
         })
@@ -66,17 +87,25 @@ const ask = () => {
 
 // When user selects 'View Roles' from first question
 const viewRoles = () => {
-    console.log(rolesArray);
+    console.log("Displaying all roles...\n");
+    connection.query("SELECT title, salary, department_name FROM role LEFT JOIN department ON role.department_id = department.id", function (err, res) {
+        if (err) throw err;
+        // Log all results of the SELECT statement
+        console.log(res);
+        ask();
+    });
 }
 
 // When user selects 'View Departments' from first question
 const viewDepartments = () => {
-    console.log(departmentsArray);
+    readDepartment();
+    ask();
 }
 
 // When user selects 'View Employees' from first question
 const viewEmployees = () => {
-    console.log(employeesArray);
+    readEmployee();
+    ask();
 }
 
 // When user selects 'Add Role' from first question
@@ -92,20 +121,17 @@ const addRole = () => {
                 type: 'input',
                 message: 'What is the salary for this role?',
                 name: 'salary',
-                validate: answer => {
-                    if (!answer) {
-                     return 'Please enter a valid number.'
-                    }
-                    return true
-                }
+                validate: function (input) {
+                    var valid = !isNaN(parseFloat(input));
+                    return valid || "Please enter a number";
+                },
+                filter: Number
             }
         ])
 
-        .then (answers => {
-            rolesArray.push(answers.title);
-            new Role (answers.title, answers.salary);
-            console.log(`****** ${answers.title} added successfully! ******`);
-            ask();
+        .then(answers => {
+            const role = new Role(connection, answers.title, answers.salary);
+            role.createRole();
         })
 }
 
@@ -121,8 +147,9 @@ const addDepartment = () => {
         ])
 
         .then(answers => {
-            departmentsArray.push(answers.dept_name);
-            new Department(answers.dept_name);
+            const department = new Department(answers.dept_name);
+            departmentsArray.push(department);
+            createRole();
             console.log(`****** ${answers.dept_name} added successfully! ******`);
             ask();
         })
@@ -130,39 +157,53 @@ const addDepartment = () => {
 
 // When user selects 'Add Employee' from first question
 const addEmployee = () => {
-    inquirer
-        .prompt([
-            {
-                type: 'input',
-                message: 'What is the employee\'s first name?',
-                name: 'first_name'
-            },
-            {
-                type: 'input',
-                message: 'What is the employee\'s last name?',
-                name: 'last_name'
-            },
-            {
-                type: 'list',
-                message: 'What is the employee\'s role?',
-                name: 'employee_role',
-                choices: rolesArray
-            },
-            // {
-            //     type: 'list',
-            //     message: 'Who is the employee\'s manager?',
-            //     name: 'employee_manager',
-            //     choices: employees
-            // }
-        ])
+    connection.query('SELECT * FROM role', function (err, res) {
+        if (err) throw err;
+        inquirer
+            .prompt([
+                {
+                    type: 'input',
+                    message: 'What is the employee\'s first name?',
+                    name: 'first_name'
+                },
+                {
+                    type: 'input',
+                    message: 'What is the employee\'s last name?',
+                    name: 'last_name'
+                },
+                {
+                    type: 'list',
+                    message: 'What is the employee\'s role?',
+                    name: 'employee_role',
+                    choices: function () {
+                        let choiceArray = [];
+                        for (let i = 0; i < res.length; i++) {
+                            choiceArray.push(res[i].title);
+                        }
+                        return choiceArray;
+                    }
+                }
+                // {
+                //     type: 'list',
+                //     message: 'Who is the employee\'s manager?',
+                //     name: 'employee_manager',
+                //     choices: employeesArray
+                // }
+            ])
 
-        .then(answers => {
-            const employee = new Employee(answers.first_name, answers.last_name, answers.employee_role, answers.employee_manager);
-            employeesArray.push(employee);
-            console.log(`****** ${answers.first_name} ${answers.last_name} added successfully! ******`);
-            // console.log(employee);
-            ask();
-        })
+            .then(answers => {
+                let roleID;
+                for (let i = 0; i < res.length; i++) {
+                    if (res[i].title === answers.employee_role) {
+                        roleID = res[i].id;
+                    }
+                }
+                const employee = new Employee(connection, answers.first_name, answers.last_name, roleID);
+                employee.createEmployee();
+            })
+    })
 }
 
-ask();
+
+// export the ask() function
+exports.ask = ask;
