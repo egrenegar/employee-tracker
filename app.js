@@ -4,23 +4,14 @@ const Role = require('./lib/Role');
 
 var mysql = require('mysql');
 const inquirer = require('inquirer')
-// const path = require("path");
-
-const employeesArray = [];
-const rolesArray = [];
-const departmentsArray = [];
-
 
 var connection = mysql.createConnection({
     host: "localhost",
 
-    // Your port; if not 3306
     port: 3306,
 
-    // Your username
     user: "root",
 
-    // Your password
     password: "rootroot",
     database: "employeeTracker_db"
 });
@@ -32,8 +23,7 @@ connection.connect(function (err) {
 });
 
 const ask = () => {
-    inquirer
-        .prompt([
+    inquirer.prompt([
             {
                 type: 'list',
                 message: 'What would you like to do?',
@@ -88,9 +78,9 @@ const ask = () => {
 // When user selects 'View Roles' from first question
 const viewRoles = () => {
     console.log("Displaying all roles...\n");
-    connection.query("SELECT title, salary, department_name FROM role LEFT JOIN department ON role.department_id = department.id", function (err, res) {
+    connection.query("SELECT title, salary, department_name FROM role LEFT JOIN department ON role.department_id = department.id",
+    function (err, res) {
         if (err) throw err;
-        // Log all results of the SELECT statement
         console.log(res);
         ask();
     });
@@ -148,10 +138,7 @@ const addDepartment = () => {
 
         .then(answers => {
             const department = new Department(answers.dept_name);
-            departmentsArray.push(department);
-            createRole();
-            console.log(`****** ${answers.dept_name} added successfully! ******`);
-            ask();
+            department.createDepartment();
         })
 }
 
