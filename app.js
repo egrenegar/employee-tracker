@@ -127,8 +127,11 @@ const addRole = () => {
                     name: 'salary',
                     // validate that the user's input is a number (Doesn't work properly when answer is invalid!!)
                     validate: function (input) {
-                        var valid = !isNaN(parseFloat(input));
-                        return valid || "Please enter a number";
+                        if (isNaN(parseFloat(input)) === false) {
+                            return true;
+                        } else {
+                        return "Please enter a number";
+                        }
                     },
                     filter: Number
                 },
