@@ -29,7 +29,7 @@ connection.connect(function (err) {
 const ask = () => {
     inquirer.prompt([
         {
-            type: 'list',
+            type: 'rawlist',
             message: 'What would you like to do?',
             name: 'action',
             choices: [
@@ -41,7 +41,7 @@ const ask = () => {
                 'Add Role',
                 'Update Employee Roles',
                 new inquirer.Separator(),
-                'DONE'
+                'EXIT'
             ]
         }
     ])
