@@ -69,7 +69,7 @@ const ask = () => {
                 case 'Update Employee Roles':
                     updateRoles();
                     break;
-                case 'DONE':
+                case 'EXIT':
                     connection.end();
             }
         })
