@@ -25,7 +25,7 @@ connection.connect(function (err) {
     ask();
 });
 
-//  user is asked initial question
+// user is asked initial question
 const ask = () => {
     inquirer.prompt([
         {
@@ -218,6 +218,55 @@ const addEmployee = () => {
                 const employee = new Employee(connection, answers.first_name, answers.last_name, roleID);
                 employee.createEmployee();
             })
+    })
+}
+
+const updateRoles = () => {
+    connection.query('SELECT first_name, last_name, title, role.id FROM employee LEFT JOIN role ON employee.role_id = role.id', 
+    function (err, res) {
+        if (err) throw err;
+        // console.log(res)
+        inquirer.prompt([
+            {
+                type: 'list',
+                message: 'Which employee\'s role would you like to update?',
+                name: 'employee',
+                choices: function() {
+                    let choiceArray = [];
+                    for (let i = 0; i < res.length; i++) {
+
+                        choiceArray.push(res[i].first_name + ' ' + res[i].last_name);
+                    }
+                    return choiceArray;
+                }
+            },
+            {
+                type: 'list',
+                message: 'What is the employee\'s NEW role?',
+                name: 'new_role',
+                choices: function () {
+                    let choiceArray = [];
+                    for (let i = 0; i < res.length; i++) {
+                        choiceArray.push(res[i].title);
+                    }
+                    return choiceArray;
+                }
+            }
+        ])
+
+        .then(answers => {
+            let roleId;
+            for (let i = 0; i < res.length; i++) {
+                if (answers.new_role === res[i].title) {
+                    roleId = res[i].id;
+                    const first_name = answers.employee.split(' ')[0];
+                    const last_name = answers.employee.split(' ')[1];
+
+                    const updatedRole = new Employee (connection, first_name, last_name, roleId)
+                    updatedRole.updateEmployee();
+                }
+            }
+        })
     })
 }
 
