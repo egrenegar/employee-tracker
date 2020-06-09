@@ -221,6 +221,7 @@ const addEmployee = () => {
     })
 }
 
+// When user selects 'Update Employee Roles' from initial question
 const updateRoles = () => {
     connection.query('SELECT first_name, last_name, title, role.id FROM employee LEFT JOIN role ON employee.role_id = role.id', 
     function (err, res) {
