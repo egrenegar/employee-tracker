@@ -81,7 +81,6 @@ const ask = () => {
 
 // When user selects 'View Roles' from initial question
 const viewRoles = () => {
-    console.log("Displaying all roles...\n");
     connection.query("SELECT title, department_name, salary FROM role LEFT JOIN department ON role.department_id = department.id",
         function (err, res) {
             if (err) throw err;
@@ -92,7 +91,6 @@ const viewRoles = () => {
 
 // When user selects 'View Departments' from initial question
 const viewDepartments = () => {
-    console.log("Displaying all departments...\n");
     connection.query("SELECT department_name FROM department",
         function (err, res) {
             if (err) throw err;
@@ -113,6 +111,7 @@ const viewEmployees = () => {
 
 // When user selects 'Add Role' from initial question
 const addRole = () => {
+    // get Department info from database to use in choices array
     connection.query('SELECT * FROM department', function (err, res) {
         if (err) throw err;
         inquirer
@@ -126,6 +125,7 @@ const addRole = () => {
                     type: 'input',
                     message: 'What is the salary for this role?',
                     name: 'salary',
+                    // validate that the user's input is a number (Doesn't work properly when answer is invalid!!)
                     validate: function (input) {
                         var valid = !isNaN(parseFloat(input));
                         return valid || "Please enter a number";
@@ -143,6 +143,7 @@ const addRole = () => {
                         }
                         return choiceArray;
                     }
+                    
                 }
             ])
 
