@@ -15,7 +15,7 @@ node app.js
 ```
 This will prompt the application to ask for the user's first desired action. 
 
-Welcome screen
+Welcome menu
 
 ![](/assets/welcome_screen.png)
 
