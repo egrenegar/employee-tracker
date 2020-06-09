@@ -28,23 +28,23 @@ connection.connect(function (err) {
 //  user is asked initial question
 const ask = () => {
     inquirer.prompt([
-            {
-                type: 'list',
-                message: 'What would you like to do?',
-                name: 'action',
-                choices: [
-                    'View All Employees',
-                    'View All Departments',
-                    'View All Roles',
-                    'Add Employee',
-                    'Add Department',
-                    'Add Role',
-                    'Update Employee Roles',
-                    new inquirer.Separator(),
-                    'DONE'
-                ]
-            }
-        ])
+        {
+            type: 'list',
+            message: 'What would you like to do?',
+            name: 'action',
+            choices: [
+                'View All Employees',
+                'View All Departments',
+                'View All Roles',
+                'Add Employee',
+                'Add Department',
+                'Add Role',
+                'Update Employee Roles',
+                new inquirer.Separator(),
+                'DONE'
+            ]
+        }
+    ])
 
         .then(answers => {
             switch (answers.action) {
@@ -83,59 +83,81 @@ const ask = () => {
 const viewRoles = () => {
     console.log("Displaying all roles...\n");
     connection.query("SELECT title, department_name, salary FROM role LEFT JOIN department ON role.department_id = department.id",
-    function (err, res) {
-        if (err) throw err;
-        console.table(res);
-        ask();
-    });
+        function (err, res) {
+            if (err) throw err;
+            console.table(res);
+            ask();
+        });
 }
 
 // When user selects 'View Departments' from initial question
 const viewDepartments = () => {
     console.log("Displaying all departments...\n");
     connection.query("SELECT department_name FROM department",
-    function (err, res) {
-        if (err) throw err;
-        console.table(res);
-        ask();
-    });
+        function (err, res) {
+            if (err) throw err;
+            console.table(res);
+            ask();
+        });
 }
 
 // When user selects 'View Employees' from initial question
 const viewEmployees = () => {
     connection.query("SELECT employee.id, first_name, last_name, department_name, title, salary FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id",
-    function (err, res) {
-        if (err) throw err;
-        console.table(res);
-        ask();
-    });
+        function (err, res) {
+            if (err) throw err;
+            console.table(res);
+            ask();
+        });
 }
 
 // When user selects 'Add Role' from initial question
 const addRole = () => {
-    inquirer
-        .prompt([
-            {
-                type: 'input',
-                message: 'What is the title of the role?',
-                name: 'title'
-            },
-            {
-                type: 'input',
-                message: 'What is the salary for this role?',
-                name: 'salary',
-                validate: function (input) {
-                    var valid = !isNaN(parseFloat(input));
-                    return valid || "Please enter a number";
+    connection.query('SELECT * FROM department', function (err, res) {
+        if (err) throw err;
+        inquirer
+            .prompt([
+                {
+                    type: 'input',
+                    message: 'What is the title of the role?',
+                    name: 'title'
                 },
-                filter: Number
-            }
-        ])
+                {
+                    type: 'input',
+                    message: 'What is the salary for this role?',
+                    name: 'salary',
+                    validate: function (input) {
+                        var valid = !isNaN(parseFloat(input));
+                        return valid || "Please enter a number";
+                    },
+                    filter: Number
+                },
+                {
+                    type: 'list',
+                    message: 'What department does the role belong to?',
+                    name: 'department',
+                    choices: function () {
+                        let choiceArray = [];
+                        for (let i = 0; i < res.length; i++) {
+                            choiceArray.push(res[i].department_name);
+                        }
+                        return choiceArray;
+                    }
+                }
+            ])
 
-        .then(answers => {
-            const role = new Role(connection, answers.title, answers.salary);
-            role.createRole();
-        })
+            .then(answers => {
+                let department_id;
+                for (let i = 0; i < res.length; i++) {
+                    if (answers.department === res[i].department_name) {
+                        department_id = res[i].id;
+                    }
+                }
+                const role = new Role(connection, answers.title, answers.salary, department_id);
+                role.createRole();
+            })
+    })
+
 }
 
 // When user selects 'Add Department' from initial question
@@ -150,7 +172,7 @@ const addDepartment = () => {
         ])
 
         .then(answers => {
-            const department = new Department(answers.dept_name);
+            const department = new Department(connection, answers.dept_name);
             department.createDepartment();
         })
 }
@@ -183,12 +205,6 @@ const addEmployee = () => {
                         return choiceArray;
                     }
                 }
-                // {
-                //     type: 'list',
-                //     message: 'Who is the employee\'s manager?',
-                //     name: 'employee_manager',
-                //     choices: employeesArray
-                // }
             ])
 
             .then(answers => {
