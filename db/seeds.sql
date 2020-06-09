@@ -15,8 +15,7 @@ VALUES ('Sales Lead', 100000, 1),
 INSERT INTO employee (first_name, last_name, role_id)
 VALUES ('Jeff', 'Hoffman', 3),
 ('Emily', 'Renegar', 2),
-('John', 'Smith', 2),
-('Jackson', 'Browne', 1),
-('Keyshia', 'Cole', 4),
-('Lauren', 'Speed', 5),
-('Emma', 'Johnson', 6);
+('John', 'White', 1),
+('Jackson', 'Browne', 5),
+('Keyshia', 'Black', 4),
+('Naomi', 'Green', 6);
