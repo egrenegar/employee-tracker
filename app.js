@@ -1,10 +1,13 @@
+// classes/constructors
 const Employee = require('./lib/Employee');
 const Department = require('./lib/Department');
 const Role = require('./lib/Role');
 
+// dependencies
 var mysql = require('mysql');
 const inquirer = require('inquirer')
 
+// connecting to mySQL database
 var connection = mysql.createConnection({
     host: "localhost",
 
@@ -22,6 +25,7 @@ connection.connect(function (err) {
     ask();
 });
 
+//  user is asked initial question
 const ask = () => {
     inquirer.prompt([
             {
@@ -75,30 +79,39 @@ const ask = () => {
         })
 };
 
-// When user selects 'View Roles' from first question
+// When user selects 'View Roles' from initial question
 const viewRoles = () => {
     console.log("Displaying all roles...\n");
-    connection.query("SELECT title, salary, department_name FROM role LEFT JOIN department ON role.department_id = department.id",
+    connection.query("SELECT title, department_name, salary FROM role LEFT JOIN department ON role.department_id = department.id",
     function (err, res) {
         if (err) throw err;
-        console.log(res);
+        console.table(res);
         ask();
     });
 }
 
-// When user selects 'View Departments' from first question
+// When user selects 'View Departments' from initial question
 const viewDepartments = () => {
-    readDepartment();
-    ask();
+    console.log("Displaying all departments...\n");
+    connection.query("SELECT department_name FROM department",
+    function (err, res) {
+        if (err) throw err;
+        console.table(res);
+        ask();
+    });
 }
 
-// When user selects 'View Employees' from first question
+// When user selects 'View Employees' from initial question
 const viewEmployees = () => {
-    readEmployee();
-    ask();
+    connection.query("SELECT employee.id, first_name, last_name, department_name, title, salary FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id",
+    function (err, res) {
+        if (err) throw err;
+        console.table(res);
+        ask();
+    });
 }
 
-// When user selects 'Add Role' from first question
+// When user selects 'Add Role' from initial question
 const addRole = () => {
     inquirer
         .prompt([
@@ -125,7 +138,7 @@ const addRole = () => {
         })
 }
 
-// When user selects 'Add Department' from first question
+// When user selects 'Add Department' from initial question
 const addDepartment = () => {
     inquirer
         .prompt([
@@ -142,7 +155,7 @@ const addDepartment = () => {
         })
 }
 
-// When user selects 'Add Employee' from first question
+// When user selects 'Add Employee' from initial question
 const addEmployee = () => {
     connection.query('SELECT * FROM role', function (err, res) {
         if (err) throw err;
@@ -190,7 +203,6 @@ const addEmployee = () => {
             })
     })
 }
-
 
 // export the ask() function
 exports.ask = ask;
