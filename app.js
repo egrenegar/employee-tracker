@@ -21,7 +21,7 @@ var connection = mysql.createConnection({
 
 connection.connect(function (err) {
     if (err) throw err;
-    console.log("connected as id " + connection.threadId + "\n");
+    console.log("\n---- Welcome to Employee Tracker! ----\n");
     ask();
 });
 
@@ -29,7 +29,7 @@ connection.connect(function (err) {
 const ask = () => {
     inquirer.prompt([
         {
-            type: 'rawlist',
+            type: 'list',
             message: 'What would you like to do?',
             name: 'action',
             choices: [
@@ -125,15 +125,13 @@ const addRole = () => {
                     type: 'input',
                     message: 'What is the salary for this role?',
                     name: 'salary',
-                    // validate that the user's input is a number (Doesn't work properly when answer is invalid!!)
                     validate: function (input) {
-                        if (isNaN(parseFloat(input)) === false) {
+                        if (isNaN(input) === false) {
                             return true;
                         } else {
-                        return "Please enter a number";
+                            return 'Please enter a valid number.';
                         }
-                    },
-                    filter: Number
+                    }
                 },
                 {
                     type: 'list',
@@ -146,7 +144,7 @@ const addRole = () => {
                         }
                         return choiceArray;
                     }
-                    
+
                 }
             ])
 
@@ -224,26 +222,13 @@ const addEmployee = () => {
     })
 }
 
-// When user selects 'Update Employee Roles' from initial question
-const updateRoles = () => {
-    connection.query('SELECT first_name, last_name, title, role.id FROM employee LEFT JOIN role ON employee.role_id = role.id', 
-    function (err, res) {
-        if (err) throw err;
-        // console.log(res)
-        inquirer.prompt([
-            {
-                type: 'list',
-                message: 'Which employee\'s role would you like to update?',
-                name: 'employee',
-                choices: function() {
-                    let choiceArray = [];
-                    for (let i = 0; i < res.length; i++) {
-
-                        choiceArray.push(res[i].first_name + ' ' + res[i].last_name);
-                    }
-                    return choiceArray;
-                }
-            },
+const setNewRole = employeeName => {
+    connection.query("SELECT id, title FROM role",
+        function (err, res) {
+            if (err) throw err;
+            console.log(res);
+            
+          inquirer.prompt([
             {
                 type: 'list',
                 message: 'What is the employee\'s NEW role?',
@@ -256,23 +241,52 @@ const updateRoles = () => {
                     return choiceArray;
                 }
             }
-        ])
+          ])
 
-        .then(answers => {
-            let roleId;
+          .then(answer => {
             for (let i = 0; i < res.length; i++) {
-                if (answers.new_role === res[i].title) {
-                    roleId = res[i].id;
-                    const first_name = answers.employee.split(' ')[0];
-                    const last_name = answers.employee.split(' ')[1];
+                if (answer.new_role === res[i].title) {
+                    let roleId = res[i].id;
+                    const first_name = employeeName.split(' ')[0];
+                    const last_name = employeeName.split(' ')[1];
 
-                    const updatedRole = new Employee (connection, first_name, last_name, roleId)
+                    const updatedRole = new Employee(connection, first_name, last_name, roleId)
                     updatedRole.updateEmployee();
                 }
             }
-        })
-    })
+          })
+        });
 }
+
+// When user selects 'Update Employee Roles' from initial question
+const updateRoles = () => {
+    connection.query('SELECT first_name, last_name FROM employee',
+        function (err, res) {
+            if (err) throw err;
+            // console.log(res)
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    message: 'Which employee\'s role would you like to update?',
+                    name: 'employee',
+                    choices: function () {
+                        let choiceArray = [];
+                        for (let i = 0; i < res.length; i++) {
+
+                            choiceArray.push(res[i].first_name + ' ' + res[i].last_name);
+                        }
+                        return choiceArray;
+                    }
+                }
+            ])
+
+            .then(answer => {
+                setNewRole(answer.employee);
+            })
+        })
+}
+
+
 
 // export the ask() function
 exports.ask = ask;
